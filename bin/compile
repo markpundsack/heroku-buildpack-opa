@@ -53,8 +53,13 @@ mkdir -p $VENDORED_LANG  && curl $LANG_PACKAGE -s -o -  | tar xzf - -C $VENDORED
 #cp "$VENDORED_LANG/bin/$BUILD_LANG" "$BUILD_DIR/bin"
 
 # setting up paths for building
-PATH="$VENDORED_SCONS:$VENDORED_NODE/bin:$PATH"
-INCLUDE_PATH="$VENDORED_NODE/include"
+export MLSTATELIBS="$VENDORED_LANG"
+export OCAMLLIB="$VENDORED_LANG/lib/ocaml"
+export OCAMLOPT="$VENDORED_LANG/bin/ocamlopt.opt"
+COMPILE_CMD="$VENDORED_LANG/lib/opa/bin/opa-bin -o app"
+
+PATH="$VENDORED_LANG/bin:$PATH"
+INCLUDE_PATH="$VENDORED_LANG/include"
 export CPATH="$INCLUDE_PATH"
 export CPPPATH="$INCLUDE_PATH"
 
@@ -67,7 +72,7 @@ fi
 # compile
 echo "-----> Compiling with $BUILD_LANG $LANG_VERSION"
 cd $BUILD_DIR
-HOME="$BUILD_DIR" $VENDORED_LANG/bin/$COMPILE_CMD *.opa 2>&1 | indent
+$COMPILE_CMD *.opa 2>&1 | indent
 if [ "${PIPESTATUS[*]}" != "0 0" ]; then
   echo " !     Failed to compile with $COMPILE_CMD"
   exit 1
