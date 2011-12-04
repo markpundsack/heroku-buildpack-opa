@@ -59,9 +59,6 @@ export OCAMLOPT="$VENDORED_LANG/lib/opa/ocaml/bin/ocamlopt.opt"
 COMPILE_CMD="$VENDORED_LANG/lib/opa/bin/opa-bin -o app"
 
 PATH="$VENDORED_LANG/bin:$PATH"
-INCLUDE_PATH="$VENDORED_LANG/lib"
-export CPATH="$INCLUDE_PATH"
-export CPPPATH="$INCLUDE_PATH"
 
 # unpack existing cache
 rm -rf $CACHE_TARGET_DIR
