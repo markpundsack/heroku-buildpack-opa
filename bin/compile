@@ -54,7 +54,7 @@ mkdir -p $VENDORED_LANG  && curl $LANG_PACKAGE -s -o -  | tar xzf - -C $VENDORED
 
 # setting up paths for building
 export MLSTATELIBS="$VENDORED_LANG"
-export OCAMLLIB="$VENDORED_LANG/lib/opa/ocaml"
+export OCAMLLIB="$VENDORED_LANG/lib/opa/ocaml/lib/ocaml"
 export OCAMLOPT="$VENDORED_LANG/lib/opa/ocaml/bin/ocamlopt.opt"
 COMPILE_CMD="$VENDORED_LANG/lib/opa/bin/opa-bin -o app"
 
