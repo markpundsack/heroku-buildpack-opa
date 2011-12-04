@@ -5,7 +5,7 @@
 set -e
 
 mktmpdir() {
-  dir=$(mktemp -t node-$1-XXXX)
+  dir=$(mktemp -t opa-$1-XXXX)
   rm -rf $dir
   mkdir -p $dir
   echo $dir
@@ -20,39 +20,37 @@ function indent() {
 }
 
 # config
-NODE_VERSION="0.4.7"
-NPM_VERSION="1.0.94"
-SCONS_VERSION="1.2.0"
-S3_BUCKET="heroku-buildpack-nodejs"
+BUILDPACK_NAME="Opa"
+BUILD_LANG="opa"
+LANG_BUILD_NUMBER="687"
+LANG_VERSION="1.0s3.5+build${LANG_BUILD_NUMBER}"
+LANG_INSTALL_DIR="mlstate-opa"
+COMPILE_CMD="opa"
+S3_BUCKET="heroku-opalang"
 
 # parse and derive params
 BUILD_DIR=$1
 CACHE_DIR=$2
 LP_DIR=`cd $(dirname $0); cd ..; pwd`
-CACHE_STORE_DIR=$CACHE_DIR"/node_modules/$NPM_VERSION"
-CACHE_TARGET_DIR=$BUILD_DIR"/node_modules"
+CACHE_STORE_DIR=$CACHE_DIR"/${BUILD_LANG}_modules/$LANG_VERSION"
+CACHE_TARGET_DIR=$BUILD_DIR"/${BUILD_LANG}_modules"
 
 # s3 packages
-NODE_PACKAGE="http://${S3_BUCKET}.s3.amazonaws.com/nodejs-${NODE_VERSION}.tgz"
-NPM_PACKAGE="http://${S3_BUCKET}.s3.amazonaws.com/npm-${NPM_VERSION}.tgz"
-SCONS_PACKAGE="http://${S3_BUCKET}.s3.amazonaws.com/scons-${SCONS_VERSION}.tgz"
+LANG_PACKAGE="http://${S3_BUCKET}.s3.amazonaws.com/${BUILD_LANG}-${LANG_BUILD_NUMBER}.tgz"
 
 # vendor directories
-VENDORED_NODE="$(mktmpdir node)"
-VENDORED_NPM="$(mktmpdir npm)"
-VENDORED_SCONS="$(mktmpdir scons)"
+#VENDORED_LANG="$(mktmpdir $BUILD_LANG)"
+VENDORED_LANG="$BUILD_DIR/$LANG_INSTALL_DIR"
 
 # download and unpack packages
-echo "-----> Fetching Node.js binaries"
-mkdir -p $VENDORED_NODE  && curl $NODE_PACKAGE -s -o -  | tar xzf - -C $VENDORED_NODE
-mkdir -p $VENDORED_NPM   && curl $NPM_PACKAGE -s -o -   | tar xzf - -C $VENDORED_NPM
-mkdir -p $VENDORED_SCONS && curl $SCONS_PACKAGE -s -o - | tar xzf - -C $VENDORED_SCONS
+echo "-----> Fetching $BUILDPACK_NAME binaries"
+mkdir -p $VENDORED_LANG  && curl $LANG_PACKAGE -s -o -  | tar xzf - -C $VENDORED_LANG
 
-# vendor node into the slug
-PATH="$BUILD_DIR/bin:$PATH"
-echo "-----> Vendoring node $NODE_VERSION"
-mkdir -p "$BUILD_DIR/bin"
-cp "$VENDORED_NODE/bin/node" "$BUILD_DIR/bin/node"
+# vendor language into the slug
+#PATH="$BUILD_DIR/bin:$PATH"
+#echo "-----> Vendoring $BUILD_LANG $LANG_VERSION"
+#mkdir -p "$BUILD_DIR/bin"
+#cp "$VENDORED_LANG/bin/$BUILD_LANG" "$BUILD_DIR/bin"
 
 # setting up paths for building
 PATH="$VENDORED_SCONS:$VENDORED_NODE/bin:$PATH"
@@ -66,15 +64,15 @@ if [ -d $CACHE_STORE_DIR ]; then
   cp -a $CACHE_STORE_DIR $CACHE_TARGET_DIR
 fi
 
-# install dependencies with npm
-echo "-----> Installing dependencies with npm $NPM_VERSION"
+# compile
+echo "-----> Compiling with $BUILD_LANG $LANG_VERSION"
 cd $BUILD_DIR
-HOME="$BUILD_DIR" $VENDORED_NODE/bin/node $VENDORED_NPM/cli.js install 2>&1 | indent
+HOME="$BUILD_DIR" $VENDORED_LANG/bin/$COMPILE_CMD *.opa 2>&1 | indent
 if [ "${PIPESTATUS[*]}" != "0 0" ]; then
-  echo " !     Failed to install dependencies with npm"
+  echo " !     Failed to compile with $COMPILE_CMD"
   exit 1
 else
-  echo "       Dependencies installed"
+  echo "       Compiled"
 fi
 
 # repack cache with new assets
