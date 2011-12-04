@@ -35,7 +35,7 @@ pushd $tempdir
 
 # build and package for heroku
 touch nothing
-vulcan build -p /app/mlstate-opa -c "curl -L -o run http://download.opalang.org/linux/opa_1.0s3.5%2Bbuild${lang_version}_amd64.run && chmod +x run && ./run -- /app/mlstate-opa" -o $tempdir/${lang}-${lang_version}.tgz -v
+vulcan build -p /app/$lang -c "curl -L -o run http://download.opalang.org/linux/opa_1.0s3.5%2Bbuild${lang_version}_amd64.run && chmod +x run && ./run -- /app/${lang}" -o $tempdir/${lang}-${lang_version}.tgz -v
 
 # upload to s3
 $basedir/aws/s3 put $S3_BUCKET \
