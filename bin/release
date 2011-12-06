@@ -6,5 +6,5 @@ cat <<EOF
 config_vars:
   PATH: ./opa/bin:/usr/local/bin:/usr/bin:/bin
 default_process_types:
-  web: ./app -p \$PORT
+  web: ./app -p \$PORT --display-logs
 EOF
